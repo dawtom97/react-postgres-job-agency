@@ -26,7 +26,7 @@ app.get('/', (req, res) => {
 //Get all companies
 app.get('/api/v1/companies', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const results = yield index_1.default.query("SELECT * FROM restaurants");
+        const results = yield index_1.default.query("SELECT * FROM companies");
         console.log(results);
         res.status(200).json({
             status: "success",
@@ -41,23 +41,71 @@ app.get('/api/v1/companies', (req, res) => __awaiter(void 0, void 0, void 0, fun
     }
 }));
 //Get specific company
-app.get('/api/v1/companies/:id', (req, res) => {
-    console.log(req.params.id);
-});
+app.get('/api/v1/companies/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(req.params);
+    try {
+        const result = yield index_1.default.query('SELECT * FROM companies WHERE id = $1', [req.params.id]);
+        res.status(200).json({
+            status: "success",
+            data: {
+                company: result.rows[0]
+            }
+        });
+    }
+    catch (err) {
+        console.log(err);
+    }
+}));
 //Create company
-app.post('/api/v1/companies', (req, res) => {
+app.post('/api/v1/companies', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, location, price_range } = req.body;
+    try {
+        const results = yield index_1.default.query("INSERT INTO companies (name,location,price_range) VALUES($1,$2,$3) returning *", [name, location, price_range]);
+        res.status(201).json({
+            status: "success",
+            data: {
+                company: results.rows[0]
+            }
+        });
+    }
+    catch (err) {
+        console.log(err);
+    }
     console.log(req.body);
-});
+}));
 //Update companies
-app.put('/api/v1/companies/:id', (req, res) => {
-    console.log(req.params.id);
-    console.log(req.body);
-});
-app.delete("/api/v1/companies/:id", (req, res) => {
-    res.status(204).json({
-        status: "success",
-    });
-});
+app.put('/api/v1/companies/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, location, price_range } = req.body;
+    const { id } = req.params;
+    try {
+        const results = yield index_1.default.query('UPDATE companies SET name = $1, location = $2, price_range = $3 WHERE id = $4 returning *', [name, location, price_range, id]);
+        res.status(200).json({
+            status: "success",
+            data: {
+                company: results.rows[0]
+            }
+        });
+    }
+    catch (err) {
+        console.log(err);
+    }
+}));
+// Company delete
+app.delete("/api/v1/companies/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.params;
+    try {
+        const results = yield index_1.default.query('DELETE FROM companies WHERE id = $1', [id]);
+        res.status(204).json({
+            status: "success",
+            data: {
+                company: results.rows[0]
+            }
+        });
+    }
+    catch (err) {
+        console.log(err);
+    }
+}));
 app.listen(port, () => {
     console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
 });

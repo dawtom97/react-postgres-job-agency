@@ -13,4 +13,4 @@ const pool = new pg_1.Pool({
     password: process.env.DB_PASS,
     port: Number(process.env.DB_PORT) || 5432,
 });
-exports.default = { query: (text) => pool.query(text) };
+exports.default = { query: (text, param) => pool.query(text, param) };
