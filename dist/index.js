@@ -15,10 +15,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const index_1 = __importDefault(require("./db/index"));
+const cors_1 = __importDefault(require("cors"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 5000;
 // For connect req body into get and post
+app.use((0, cors_1.default)());
 app.use(express_1.default.json());
 app.get('/', (req, res) => {
     res.send('⚡️Expresowy + TypeScript Server');
@@ -60,7 +62,7 @@ app.get('/api/v1/companies/:id', (req, res) => __awaiter(void 0, void 0, void 0,
 app.post('/api/v1/companies', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, location, price_range } = req.body;
     try {
-        const results = yield index_1.default.query("INSERT INTO companies (name,location,price_range) VALUES($1,$2,$3) returning *", [name, location, price_range]);
+        const results = yield index_1.default.query(`INSERT INTO companies (name,location,price_range) VALUES($1,$2,$3) returning *`, [name, location, price_range]);
         res.status(201).json({
             status: "success",
             data: {
@@ -71,7 +73,6 @@ app.post('/api/v1/companies', (req, res) => __awaiter(void 0, void 0, void 0, fu
     catch (err) {
         console.log(err);
     }
-    console.log(req.body);
 }));
 //Update companies
 app.put('/api/v1/companies/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {

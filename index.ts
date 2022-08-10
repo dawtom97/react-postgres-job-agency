@@ -1,6 +1,7 @@
 import express, { Express, NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
-import db from './db/index'
+import db from './db/index';
+import cors from 'cors';
 
 dotenv.config();
 
@@ -9,6 +10,7 @@ const port = process.env.PORT || 5000;
 
 
 // For connect req body into get and post
+app.use(cors());
 app.use(express.json());
 
 app.get('/', (req: Request, res: Response) => {
@@ -54,7 +56,7 @@ app.get('/api/v1/companies/:id', async (req: Request, res: Response) => {
 app.post('/api/v1/companies', async (req: Request, res: Response) => {
   const { name, location, price_range } = req.body;
   try {
-    const results = await db.query("INSERT INTO companies (name,location,price_range) VALUES($1,$2,$3) returning *", [name, location, price_range]);
+    const results = await db.query(`INSERT INTO companies (name,location,price_range) VALUES($1,$2,$3) returning *`, [name, location, price_range]);
     res.status(201).json({
       status: "success",
       data: {
@@ -65,7 +67,6 @@ app.post('/api/v1/companies', async (req: Request, res: Response) => {
   } catch (err) {
     console.log(err)
   }
-  console.log(req.body)
 })
 
 
