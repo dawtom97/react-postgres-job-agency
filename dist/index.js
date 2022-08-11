@@ -42,6 +42,21 @@ app.get('/api/v1/companies', (req, res) => __awaiter(void 0, void 0, void 0, fun
         console.log(err);
     }
 }));
+//get review about company
+app.get('/api/v1/reviews/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const result = yield index_1.default.query('SELECT * FROM reviews WHERE company_id = $1', [req.params.id]);
+        res.status(200).json({
+            status: "success",
+            data: {
+                review: result.rows
+            }
+        });
+    }
+    catch (err) {
+        console.log(err);
+    }
+}));
 //Get specific company
 app.get('/api/v1/companies/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(req.params);

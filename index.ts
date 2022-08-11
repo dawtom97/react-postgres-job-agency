@@ -35,6 +35,22 @@ app.get('/api/v1/companies', async (req: Request, res: Response) => {
 
 });
 
+
+//get review about company
+app.get('/api/v1/reviews/:id', async (req:Request, res:Response) => {
+  try {
+    const result = await db.query('SELECT * FROM reviews WHERE company_id = $1',[req.params.id]);
+    res.status(200).json({
+      status:"success",
+      data: {
+        review: result.rows
+      }
+    })
+  } catch (err) {
+    console.log(err)
+  }
+})
+
 //Get specific company
 app.get('/api/v1/companies/:id', async (req: Request, res: Response) => {
   console.log(req.params);
@@ -68,8 +84,6 @@ app.post('/api/v1/companies', async (req: Request, res: Response) => {
     console.log(err)
   }
 })
-
-
 
 
 //Update companies
@@ -109,6 +123,8 @@ app.delete("/api/v1/companies/:id", async (req: Request, res: Response) => {
   }
 
 })
+
+
 
 
 app.listen(port, () => {
