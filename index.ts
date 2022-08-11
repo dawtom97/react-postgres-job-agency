@@ -39,11 +39,26 @@ app.get('/api/v1/companies', async (req: Request, res: Response) => {
 //get review about company
 app.get('/api/v1/reviews/:id', async (req:Request, res:Response) => {
   try {
-    const result = await db.query('SELECT * FROM reviews WHERE company_id = $1',[req.params.id]);
+    const reviews = await db.query('SELECT * FROM reviews WHERE company_id = $1',[req.params.id]);
     res.status(200).json({
       status:"success",
       data: {
-        review: result.rows
+        reviews: reviews.rows
+      }
+    })
+  } catch (err) {
+    console.log(err)
+  }
+});
+app.post('/api/v1/reviews/:id/add', async  (req:Request, res:Response) => {
+  console.log(req.body)
+  try {
+    const { name, content, rating, company_id } = req.body;
+    const results = await db.query(`INSERT INTO reviews (company_id,name,content,rating) VALUES($1,$2,$3,$4) returning *`, [company_id, name, content,rating]);
+    res.status(201).json({
+      status: "success",
+      data: {
+        review:results.rows[0]
       }
     })
   } catch (err) {
@@ -55,11 +70,11 @@ app.get('/api/v1/reviews/:id', async (req:Request, res:Response) => {
 app.get('/api/v1/companies/:id', async (req: Request, res: Response) => {
   console.log(req.params);
   try {
-    const result = await db.query('SELECT * FROM companies WHERE id = $1', [req.params.id]);
+    const company = await db.query('SELECT * FROM companies WHERE id = $1', [req.params.id]);
     res.status(200).json({
       status: "success",
       data: {
-        company: result.rows[0]
+        company: company.rows[0]
       }
     })
   } catch (err) {

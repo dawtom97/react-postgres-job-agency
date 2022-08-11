@@ -45,11 +45,27 @@ app.get('/api/v1/companies', (req, res) => __awaiter(void 0, void 0, void 0, fun
 //get review about company
 app.get('/api/v1/reviews/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const result = yield index_1.default.query('SELECT * FROM reviews WHERE company_id = $1', [req.params.id]);
+        const reviews = yield index_1.default.query('SELECT * FROM reviews WHERE company_id = $1', [req.params.id]);
         res.status(200).json({
             status: "success",
             data: {
-                review: result.rows
+                reviews: reviews.rows
+            }
+        });
+    }
+    catch (err) {
+        console.log(err);
+    }
+}));
+app.post('/api/v1/reviews/:id/add', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log(req.body);
+    try {
+        const { name, content, rating, company_id } = req.body;
+        const results = yield index_1.default.query(`INSERT INTO reviews (company_id,name,content,rating) VALUES($1,$2,$3,$4) returning *`, [company_id, name, content, rating]);
+        res.status(201).json({
+            status: "success",
+            data: {
+                review: results.rows[0]
             }
         });
     }
@@ -61,11 +77,11 @@ app.get('/api/v1/reviews/:id', (req, res) => __awaiter(void 0, void 0, void 0, f
 app.get('/api/v1/companies/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(req.params);
     try {
-        const result = yield index_1.default.query('SELECT * FROM companies WHERE id = $1', [req.params.id]);
+        const company = yield index_1.default.query('SELECT * FROM companies WHERE id = $1', [req.params.id]);
         res.status(200).json({
             status: "success",
             data: {
-                company: result.rows[0]
+                company: company.rows[0]
             }
         });
     }
