@@ -20,7 +20,7 @@ app.get('/', (req: Request, res: Response) => {
 //Get all companies
 app.get('/api/v1/companies', async (req: Request, res: Response) => {
   try {
-    const results = await db.query("SELECT * FROM companies");
+    const results = await db.query("SELECT * FROM companies left join (select company_id, COUNT(*), TRUNC(AVG(rating),1) as average_rating from reviews group by company_id) reviews on companies.id = reviews.company_id");
     console.log(results);
     res.status(200).json({
       status: "success",
@@ -51,7 +51,7 @@ app.get('/api/v1/reviews/:id', async (req:Request, res:Response) => {
   }
 });
 app.post('/api/v1/reviews/:id/add', async  (req:Request, res:Response) => {
-  console.log(req.body)
+  console.log(req.body, 'REQ')
   try {
     const { name, content, rating, company_id } = req.body;
     const results = await db.query(`INSERT INTO reviews (company_id,name,content,rating) VALUES($1,$2,$3,$4) returning *`, [company_id, name, content,rating]);

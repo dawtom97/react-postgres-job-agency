@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 //Get all companies
 app.get('/api/v1/companies', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const results = yield index_1.default.query("SELECT * FROM companies");
+        const results = yield index_1.default.query("SELECT * FROM companies left join (select company_id, COUNT(*), TRUNC(AVG(rating),1) as average_rating from reviews group by company_id) reviews on companies.id = reviews.company_id");
         console.log(results);
         res.status(200).json({
             status: "success",
@@ -58,7 +58,7 @@ app.get('/api/v1/reviews/:id', (req, res) => __awaiter(void 0, void 0, void 0, f
     }
 }));
 app.post('/api/v1/reviews/:id/add', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.body);
+    console.log(req.body, 'REQ');
     try {
         const { name, content, rating, company_id } = req.body;
         const results = yield index_1.default.query(`INSERT INTO reviews (company_id,name,content,rating) VALUES($1,$2,$3,$4) returning *`, [company_id, name, content, rating]);
