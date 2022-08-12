@@ -11,3 +11,14 @@ const pool = new Pool({
 });
 
 export default { query: (text: string,param?: (string|number)[]) => pool.query(text,param) };
+
+
+
+// CREATE TABLE users(
+//     id SERIAL PRIMARY KEY,
+//     username VARCHAR(30) NOT NULL UNIQUE,
+//     email VARCHAR(254) UNIQUE,
+//     firstname VARCHAR(30) NOT NULL,
+//     lastname VARCHAR(30) NOT NULL,
+//     passhash VARCHAR NOT NULL
+// );

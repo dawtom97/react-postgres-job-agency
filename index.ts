@@ -2,6 +2,17 @@ import express, { Express, NextFunction, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import db from './db/index';
 import cors from 'cors';
+import session from 'express-session';
+import authRouter from './routers/authRouter'
+
+declare module "express-session" {
+  interface SessionData {
+    user: {
+      username:string,
+      id: string | number
+    };
+  }
+}
 
 dotenv.config();
 
@@ -9,18 +20,36 @@ const app: Express = express();
 const port = process.env.PORT || 5000;
 
 
-// For connect req body into get and post
+
 app.use(cors());
+// For connect req body into get and post
 app.use(express.json());
+app.use(session({
+   secret: process.env.COOKIE_SECRET,
+   credentials: true,
+   name:"sid",
+   resave:false,
+   saveUninitialized:false,
+   cookie: {
+    secure: process.env.ENVIRONMENT === "production" ? "true" : "auto",
+    httpOnly: true,
+    sameSite: process.env.ENVIRONMENT === 'production' ? 'none' : 'lax'
+   }
+} as any))
+
+
+app.use("/api/v1/auth",authRouter);
 
 app.get('/', (req: Request, res: Response) => {
   res.send('⚡️Expresowy + TypeScript Server');
 });
 
+
+
 //Get all companies
 app.get('/api/v1/companies', async (req: Request, res: Response) => {
   try {
-    const results = await db.query("SELECT * FROM companies");
+    const results = await db.query("SELECT * FROM companies left join (select company_id, COUNT(*), TRUNC(AVG(rating),1) as average_rating from reviews group by company_id) reviews on companies.id = reviews.company_id");
     console.log(results);
     res.status(200).json({
       status: "success",
@@ -35,15 +64,46 @@ app.get('/api/v1/companies', async (req: Request, res: Response) => {
 
 });
 
+
+//get review about company
+app.get('/api/v1/reviews/:id', async (req:Request, res:Response) => {
+  try {
+    const reviews = await db.query('SELECT * FROM reviews WHERE company_id = $1',[req.params.id]);
+    res.status(200).json({
+      status:"success",
+      data: {
+        reviews: reviews.rows
+      }
+    })
+  } catch (err) {
+    console.log(err)
+  }
+});
+app.post('/api/v1/reviews/:id/add', async  (req:Request, res:Response) => {
+ // console.log(req.body, 'REQ')
+  try {
+    const { name, content, rating, company_id } = req.body;
+    const results = await db.query(`INSERT INTO reviews (company_id,name,content,rating) VALUES($1,$2,$3,$4) returning *`, [company_id, name, content,rating]);
+    res.status(201).json({
+      status: "success",
+      data: {
+        review:results.rows[0]
+      }
+    })
+  } catch (err) {
+    console.log(err)
+  }
+})
+
 //Get specific company
 app.get('/api/v1/companies/:id', async (req: Request, res: Response) => {
-  console.log(req.params);
+ // console.log(req.params);
   try {
-    const result = await db.query('SELECT * FROM companies WHERE id = $1', [req.params.id]);
+    const company = await db.query('SELECT * FROM companies left join (select company_id, COUNT(*), TRUNC(AVG(rating),1) as average_rating from reviews group by company_id) reviews on companies.id = reviews.company_id where id = $1', [req.params.id]);
     res.status(200).json({
       status: "success",
       data: {
-        company: result.rows[0]
+        company: company.rows[0]
       }
     })
   } catch (err) {
@@ -68,8 +128,6 @@ app.post('/api/v1/companies', async (req: Request, res: Response) => {
     console.log(err)
   }
 })
-
-
 
 
 //Update companies
@@ -109,7 +167,6 @@ app.delete("/api/v1/companies/:id", async (req: Request, res: Response) => {
   }
 
 })
-
 
 app.listen(port, () => {
   console.log(`⚡️[server]: Server is running at https://localhost:${port}`);
