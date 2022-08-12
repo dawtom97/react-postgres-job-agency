@@ -16,12 +16,27 @@ const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const index_1 = __importDefault(require("./db/index"));
 const cors_1 = __importDefault(require("cors"));
+const express_session_1 = __importDefault(require("express-session"));
+const authRouter_1 = __importDefault(require("./routers/authRouter"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 5000;
-// For connect req body into get and post
 app.use((0, cors_1.default)());
+// For connect req body into get and post
 app.use(express_1.default.json());
+app.use((0, express_session_1.default)({
+    secret: process.env.COOKIE_SECRET,
+    credentials: true,
+    name: "sid",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.ENVIRONMENT === "production" ? "true" : "auto",
+        httpOnly: true,
+        sameSite: process.env.ENVIRONMENT === 'production' ? 'none' : 'lax'
+    }
+}));
+app.use("/api/v1/auth", authRouter_1.default);
 app.get('/', (req, res) => {
     res.send('⚡️Expresowy + TypeScript Server');
 });
@@ -58,7 +73,7 @@ app.get('/api/v1/reviews/:id', (req, res) => __awaiter(void 0, void 0, void 0, f
     }
 }));
 app.post('/api/v1/reviews/:id/add', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.body, 'REQ');
+    // console.log(req.body, 'REQ')
     try {
         const { name, content, rating, company_id } = req.body;
         const results = yield index_1.default.query(`INSERT INTO reviews (company_id,name,content,rating) VALUES($1,$2,$3,$4) returning *`, [company_id, name, content, rating]);
@@ -75,9 +90,9 @@ app.post('/api/v1/reviews/:id/add', (req, res) => __awaiter(void 0, void 0, void
 }));
 //Get specific company
 app.get('/api/v1/companies/:id', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(req.params);
+    // console.log(req.params);
     try {
-        const company = yield index_1.default.query('SELECT * FROM companies WHERE id = $1', [req.params.id]);
+        const company = yield index_1.default.query('SELECT * FROM companies left join (select company_id, COUNT(*), TRUNC(AVG(rating),1) as average_rating from reviews group by company_id) reviews on companies.id = reviews.company_id where id = $1', [req.params.id]);
         res.status(200).json({
             status: "success",
             data: {

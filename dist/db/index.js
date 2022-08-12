@@ -14,3 +14,11 @@ const pool = new pg_1.Pool({
     port: Number(process.env.DB_PORT) || 5432,
 });
 exports.default = { query: (text, param) => pool.query(text, param) };
+// CREATE TABLE users(
+//     id SERIAL PRIMARY KEY,
+//     username VARCHAR(30) NOT NULL UNIQUE,
+//     email VARCHAR(254) UNIQUE,
+//     firstname VARCHAR(30) NOT NULL,
+//     lastname VARCHAR(30) NOT NULL,
+//     passhash VARCHAR NOT NULL
+// );
